@@ -28,15 +28,13 @@ Theta1 = reshape(nn_params(1:hidden_layer_total_size), ...
 Theta2 = reshape(nn_params((1 + hidden_layer_total_size):end), ...
                  num_labels, (hidden_layer_size + 1));
 
-% You need to return the following variables correctly 
-Theta1_grad = zeros(size(Theta1));
-Theta2_grad = zeros(size(Theta2));
-
 % 5000x401 * 401x25 = 5000x25 (25 activation units per training example)
-a_hidden = sigmoid(addColumnOfOnes(X) * Theta1');
+z2 = addColumnOfOnes(X) * Theta1';
+% Add bias units to hidden layer. (5000x25 -> 5000x26)
+a_hidden = addColumnOfOnes(sigmoid(z2));
 
 % 5000x26 * 26x10 = 5000x10 (10 hypotheses/predictions per training example)
-h = sigmoid(addColumnOfOnes(a_hidden) * Theta2');
+h = sigmoid(a_hidden * Theta2');
 
 % Recode y from 5000x1 matrix to 5000x10 matrix (num_labels = 10).
 % Each y(i) is a digit from 0 to 9, representing the output class that
@@ -57,26 +55,27 @@ Theta1_squared = sum(sum(ignoreColumn1(Theta1) .^ 2));
 Theta2_squared = sum(sum(ignoreColumn1(Theta2) .^ 2));
 J = J_unreg + (lambda/(2*m)) * (Theta1_squared + Theta2_squared);
 
-% ====================== YOUR CODE HERE ======================
-% Part 2: Implement the backpropagation algorithm to compute the gradients
-%         Theta1_grad and Theta2_grad. You should return the partial derivatives of
-%         the cost function with respect to Theta1 and Theta2 in Theta1_grad and
-%         Theta2_grad, respectively. After implementing Part 2, you can check
-%         that your implementation is correct by running checkNNGradients
-%
-%         Note: The vector y passed into the function is a vector of labels
-%               containing values from 1..K. You need to map this vector into a 
-%               binary vector of 1's and 0's to be used with the neural network
-%               cost function.
-%
-%         Hint: We recommend implementing backpropagation using a for-loop
-%               over the training examples if you are implementing it for the 
-%               first time.
-%
-% -------------------------------------------------------------
-% =========================================================================
+% Backpropagation Algorithm
+delta1 = zeros(size(Theta1));
+delta2 = zeros(size(Theta2));
+
+for t = 1:m
+	x_t = [1 X(t,:)]; % 1x401
+	y_t = y_recoded(t,:); % 1x10
+	h_t = h(t,:); % 1x10
+
+	output_layer_error = h_t - y_t; % 1x10
+	sg = sigmoidGradient(z2(t,:)); % 1x25
+	hidden_layer_error = ignoreColumn1(output_layer_error * Theta2) .* sg; % 1x25
+
+	delta1 += hidden_layer_error' * x_t; % 25x1 * 1x401 = 25x401
+	delta2 += output_layer_error' * a_hidden(t,:); % 10x1 * 1x26 = 10x26
+end
+
+Theta1_grad = delta1 ./ m;
+Theta2_grad = delta2 ./ m;
 
 % Unroll gradients
-grad = [Theta1_grad(:) ; Theta2_grad(:)];
+grad = [Theta1_grad(:); Theta2_grad(:)];
 
 end
