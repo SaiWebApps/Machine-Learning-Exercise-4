@@ -18,6 +18,7 @@ m = size(X, 1); % Number of training examples
 n = size(X, 2); % Number of features
 hidden_layer_total_size = hidden_layer_size * (input_layer_size + 1);
 addColumnOfOnes = @(matrix) [ones(size(matrix, 1), 1), matrix];
+ignoreColumn1 = @(matrix) matrix(:, 2:size(matrix, 2));
 
 % Reshape nn_params back into the parameters Theta1 and Theta2, 
 % the weight matrices for our 2 layer neural network
@@ -52,8 +53,8 @@ J_part2 = sum((1-y_recoded) .* log(1-h)); % 1x5000 - column sums
 J_unreg = (-1/m) * sum(J_part1 + J_part2);
 
 % Incorporate regularization into J.
-Theta1_squared = sum(sum(Theta1 .^ 2));
-Theta2_squared = sum(sum(Theta2 .^ 2));
+Theta1_squared = sum(sum(ignoreColumn1(Theta1) .^ 2));
+Theta2_squared = sum(sum(ignoreColumn1(Theta2) .^ 2));
 J = J_unreg + (lambda/(2*m)) * (Theta1_squared + Theta2_squared);
 
 % ====================== YOUR CODE HERE ======================
