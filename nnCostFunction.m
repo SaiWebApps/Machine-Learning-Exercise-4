@@ -56,8 +56,8 @@ Theta2_squared = sum(sum(ignoreColumn1(Theta2) .^ 2));
 J = J_unreg + (lambda/(2*m)) * (Theta1_squared + Theta2_squared);
 
 % Backpropagation Algorithm
-delta1 = zeros(size(Theta1));
-delta2 = zeros(size(Theta2));
+delta1 = zeros(size(Theta1)); % 25x401
+delta2 = zeros(size(Theta2)); % 10x26
 
 for t = 1:m
 	x_t = [1 X(t,:)]; % 1x401
@@ -74,6 +74,10 @@ end
 
 Theta1_grad = delta1 ./ m;
 Theta2_grad = delta2 ./ m;
+
+% Regularize the gradients. Both vectors' column 1 is unaffected.
+Theta1_grad(:,2:end) += (lambda/m) * Theta1(:,2:end);
+Theta2_grad(:,2:end) += (lambda/m) * Theta2(:,2:end);
 
 % Unroll gradients
 grad = [Theta1_grad(:); Theta2_grad(:)];
